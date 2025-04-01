@@ -803,38 +803,53 @@ app.get('/api/my-ratings', isAuthenticated, async (req, res) => {
 // Get user profile
 app.get('/api/profile', isAuthenticated, async (req, res) => {
     try {
+        // Check if user is authenticated
+        if (!req.user || !req.user.id) {
+            console.error('User not authenticated or missing ID');
+            return res.status(401).json({ error: 'User not authenticated' });
+        }
+        
+        console.log('Fetching profile for user ID:', req.user.id);
+        
+        // Simplified query that doesn't rely on writer_portfolios table
         const result = await pool.query(`
-            SELECT u.id, u.name, u.email, u.profile_picture, u.university_stream, 
-                   u.whatsapp_number, u.writer_status, u.rating, u.total_ratings, 
-                   u.expiration_notified, u.created_at,
-                   wp.sample_work_image, wp.description as portfolio_description
-            FROM users u
-            LEFT JOIN writer_portfolios wp ON wp.writer_id = u.id
-            WHERE u.id = $1
+            SELECT id, name, email, profile_picture, university_stream, 
+                   whatsapp_number, writer_status, rating, total_ratings, 
+                   expiration_notified, created_at, role
+            FROM users
+            WHERE id = $1
         `, [req.user.id]);
         
         if (result.rows.length === 0) {
+            console.error('User not found in database:', req.user.id);
             return res.status(404).json({ error: 'User not found' });
         }
 
         const user = result.rows[0];
         
-        // Format portfolio data if it exists
-        if (user.sample_work_image || user.portfolio_description) {
-            user.portfolio = {
-                sample_work_image: user.sample_work_image,
-                description: user.portfolio_description
-            };
+        // Try to get portfolio data if it exists, but don't fail if the table doesn't exist
+        try {
+            const portfolioResult = await pool.query(`
+                SELECT sample_work_image, description
+                FROM writer_portfolios
+                WHERE writer_id = $1
+            `, [req.user.id]);
+            
+            if (portfolioResult.rows.length > 0) {
+                user.portfolio = {
+                    sample_work_image: portfolioResult.rows[0].sample_work_image,
+                    description: portfolioResult.rows[0].description
+                };
+            }
+        } catch (portfolioError) {
+            console.error('Error fetching portfolio (non-critical):', portfolioError);
+            // Continue without portfolio data
         }
-        
-        // Remove redundant fields
-        delete user.sample_work_image;
-        delete user.portfolio_description;
         
         res.json(user);
     } catch (error) {
         console.error('Error fetching profile:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Internal server error: ' + error.message });
     }
 });
 
