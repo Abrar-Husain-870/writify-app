@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from './Header';
-import ExpirationNotice from './ExpirationNotice';
 
 interface User {
     id: number;
     name: string;
     email: string;
-    expiration_notified: boolean;
 }
 
 const Dashboard: React.FC = () => {
@@ -16,7 +14,7 @@ const Dashboard: React.FC = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Fetch user data to check expiration status
+        // Fetch user data
         fetch('https://writify-app.onrender.com/api/profile', {
             credentials: 'include'
         })
@@ -38,11 +36,6 @@ const Dashboard: React.FC = () => {
 
             {/* Main content */}
             <main className="max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-                {/* Show expiration notice if user is approaching expiration */}
-                {!loading && user?.expiration_notified && (
-                    <ExpirationNotice expirationNotified={user.expiration_notified} />
-                )}
-
                 <div className="text-center mb-8 sm:mb-12">
                     <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white">
                         Welcome to Writify

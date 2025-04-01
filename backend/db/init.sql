@@ -18,7 +18,6 @@ CREATE TABLE users (
     writer_status VARCHAR(20) CHECK (writer_status IN ('active', 'busy', 'inactive')),
     rating NUMERIC(3,2) DEFAULT 0,
     total_ratings INTEGER DEFAULT 0,
-    expiration_notified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 

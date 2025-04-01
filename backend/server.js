@@ -94,55 +94,15 @@ const cleanupOldUserData = async () => {
     }
 };
 
-// Function to identify users approaching the 6-month expiration date
-// and mark them for notification
-const markUsersForExpirationNotice = async () => {
-    try {
-        console.log('Checking for users approaching expiration...');
-        
-        // Calculate date 5 months and 15 days ago (15 days before 6-month expiration)
-        const approachingExpiration = new Date();
-        approachingExpiration.setMonth(approachingExpiration.getMonth() - 5);
-        approachingExpiration.setDate(approachingExpiration.getDate() - 15);
-        
-        // Find users approaching expiration who haven't been notified yet
-        const result = await pool.query(
-            `UPDATE users 
-             SET expiration_notified = TRUE 
-             WHERE created_at < $1 
-             AND created_at > $2 
-             AND (expiration_notified IS NULL OR expiration_notified = FALSE) 
-             AND role = $3 
-             RETURNING id, email, name`,
-            [approachingExpiration.toISOString(), new Date(approachingExpiration).setMonth(approachingExpiration.getMonth() - 1), 'student']
-        );
-        
-        if (result.rows.length > 0) {
-            console.log(`Marked ${result.rows.length} users for expiration notification`);
-            console.log('Users approaching expiration:', result.rows.map(row => row.email));
-            
-            // In a real application, you would send emails here
-            // For now, we'll just log the information
-        }
-        
-    } catch (error) {
-        console.error('Error marking users for expiration notification:', error);
-    }
-};
-
 // Schedule cleanup to run at midnight every day
 // This will check for users older than 6 months and delete their data
 cron.schedule('0 0 * * *', cleanupOldUserData);
 
-// Schedule expiration notifications to run at 1 AM every day
-cron.schedule('0 1 * * *', markUsersForExpirationNotice);
-
-// Run cleanup and notification check on startup in production (optional)
+// Run cleanup on startup in production (optional)
 if (process.env.NODE_ENV === 'production') {
     // Wait 5 minutes after startup before running initial cleanup
     setTimeout(() => {
         cleanupOldUserData();
-        markUsersForExpirationNotice();
     }, 5 * 60 * 1000);
 }
 
@@ -811,11 +771,11 @@ app.get('/api/profile', isAuthenticated, async (req, res) => {
         
         console.log('Fetching profile for user ID:', req.user.id);
         
-        // Simplified query that doesn't rely on writer_portfolios table
+        // Simplified query without expiration_notified field
         const result = await pool.query(`
             SELECT id, name, email, profile_picture, university_stream, 
                    whatsapp_number, writer_status, rating, total_ratings, 
-                   expiration_notified, created_at, role
+                   created_at, role
             FROM users
             WHERE id = $1
         `, [req.user.id]);
