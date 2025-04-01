@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from './Header';
+import { API } from '../utils/api';
 
 interface User {
     id: number;
@@ -15,7 +16,7 @@ const Dashboard: React.FC = () => {
 
     useEffect(() => {
         // Fetch user data
-        fetch('/api/profile', {
+        fetch(`${API.baseUrl}/api/profile`, {
             credentials: 'include'
         })
         .then(res => {
