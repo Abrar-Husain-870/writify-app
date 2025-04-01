@@ -15,7 +15,7 @@ const Dashboard: React.FC = () => {
 
     useEffect(() => {
         // Fetch user data
-        fetch('https://writify-app.onrender.com/api/profile', {
+        fetch('/api/profile', {
             credentials: 'include'
         })
         .then(res => res.json())
