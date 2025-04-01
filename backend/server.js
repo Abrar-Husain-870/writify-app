@@ -477,6 +477,17 @@ app.post('/api/assignment-requests/:id/accept', isAuthenticated, async (req, res
         // Start transaction
         await pool.query('BEGIN');
         
+        // First, check if this is the user's own request
+        const checkOwnRequest = await pool.query(`
+            SELECT client_id FROM assignment_requests
+            WHERE id = $1
+        `, [requestId]);
+        
+        if (checkOwnRequest.rows.length > 0 && checkOwnRequest.rows[0].client_id === req.user.id) {
+            await pool.query('ROLLBACK');
+            return res.status(403).json({ error: 'You cannot accept your own assignment request' });
+        }
+        
         // Update request status
         const requestResult = await pool.query(`
             UPDATE assignment_requests 
@@ -911,6 +922,11 @@ app.post('/api/ratings', isAuthenticated, async (req, res) => {
         // Validate input
         if (!rated_id || !rating || !assignment_request_id) {
             return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        // Prevent users from rating themselves
+        if (parseInt(rated_id) === req.user.id) {
+            return res.status(403).json({ error: 'You cannot rate yourself' });
         }
         
         // Start transaction
