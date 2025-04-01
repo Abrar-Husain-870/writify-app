@@ -18,7 +18,12 @@ const Dashboard: React.FC = () => {
         fetch('/api/profile', {
             credentials: 'include'
         })
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) {
+                throw new Error(`HTTP error! Status: ${res.status}`);
+            }
+            return res.json();
+        })
         .then(data => {
             setUser(data);
             setLoading(false);
