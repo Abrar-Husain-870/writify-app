@@ -228,6 +228,20 @@ const Tutorial: React.FC = () => {
                                     </div>
                                 </div>
                             </section>
+                            
+                            {/* Contact Me */}
+                            <section className="mt-8 pt-6 border-t border-gray-200">
+                                <h2 className="text-2xl font-semibold text-gray-800 mb-3">Contact Me</h2>
+                                <p className="text-gray-600 mb-2">
+                                    If you have any questions, suggestions, or need assistance with the Writify app, please contact me at:
+                                </p>
+                                <div className="bg-gray-100 p-3 rounded-md inline-block font-mono text-gray-800">
+                                    husainabrar870@gmail.com
+                                </div>
+                                <p className="text-gray-500 text-sm mt-2">
+                                    (Please copy the email address manually if you wish to contact me)
+                                </p>
+                            </section>
                         </div>
                     </div>
                 </div>
